@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t fanpu/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run fanpu/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t fanpu/multi-client ./client
+  - docker build -t fanpu/multi-nginx ./nginx
+  - docker build -t fanpu/multi-server ./server
+  - docker build -t fanpu/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Take those images and push them to docker hub
+  - docker push fanpu/multi-client
+  - docker push fanpu/multi-nginx
+  - docker push fanpu/multi-server
+  - docker push fanpu/multi-worker
